@@ -1,6 +1,6 @@
 #EXTM3U
 # 广东联通内网
-# 生成时间: 2026-11-27 09:50:15
+# 生成时间: 2026-11-27 12:58:07
 # 规则: 分类列表每台一条主线路，其余线路见最底部备用线路分组
 
 #EXTINF:-1 tvg-name="深圳卫视" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/%E6%B7%B1%E5%9C%B3%E5%8D%AB%E8%A7%86.png" group-title="广东",深圳卫视
