@@ -1,0 +1,60 @@
+{
+  "upstream": "https://445569.pages.dev/https://raw.githubusercontent.com/fafa002/yf2025/refs/heads/main/yiyifafa.txt",
+  "upstream_fallback": "https://raw.githubusercontent.com/fafa002/yf2025/refs/heads/main/yiyifafa.txt",
+  "spare_pool": {
+    "seed_file": "xinghai.txt",
+    "max_lines": 8,
+    "drop_words": ["公众号", "点播", "购物", "MOV", "mp4", "音乐", "MTV", "荔枝", "巡礼", "创一流"],
+    "third_party": [
+      "https://tc.qqij.cn/down.php/ed7cdc065c9299d5d080a6652df19050.m3u",
+      "https://tc.qqij.cn/down.php/f7cfe0f024e1b455b3cc4c18f1250709.m3u",
+      "https://tc.qqij.cn/down.php/e0c84b88d03c2f5b2c458e49a94282fd.m3u",
+      "https://tc.qqij.cn/down.php/0d5ecafcac21424b11440cd1693e32d9.m3u",
+      "https://tc.qqij.cn/down.php/efe74a22e6d42508653f74ef804993d2.m3u",
+      "https://tc.qqij.cn/down.php/1a1897f8f60a05801b83905c00456adc.m3u",
+      "http://8.138.7.223/live.txt",
+      "http://xhztv.top/new.txt",
+      "http://xhztv.top/xhz/live.txt",
+      "http://fmys.top/lib/live.m3u"
+    ]
+  },
+  "subscriptions": {
+    "mobile.txt": {
+      "title": "广东移动内网",
+      "line_priority": {
+        "广东珠江频道": ["xch819.cn"],
+        "大湾区卫视": ["20260809.xyz"],
+        "嘉佳卡通": ["bobohome.ignorelist.com"]
+      },
+      "groups": [
+        { "source_groups": ["广东移动(内网)"], "role": "primary" },
+        { "source_groups": ["咪咕央视2"], "role": "backup" }
+      ]
+    },
+    "unicom.txt": {
+      "title": "广东联通内网",
+      "groups": [
+        { "source_groups": ["广东联通(内网)"], "role": "primary" },
+        { "source_groups": ["咪咕央视2"], "role": "backup" },
+        { "source_groups": ["央视频"], "role": "backup" }
+      ]
+    },
+    "backup.txt": {
+      "title": "琉璃TV · 全集备用源（上游其余分组原样保留）",
+      "mode": "others",
+      "exclude_groups": [
+        "广东移动(内网)",
+        "广东联通(内网)",
+        "咪咕央视2",
+        "广东荔枝网",
+        "咪咕体育",
+        "咪咕体育2",
+        "央视频",
+        "私密频道_169169",
+        "私密频道2_169169",
+        "JAV點播_169169",
+        "韩国团播_169169"
+      ]
+    }
+  }
+}
