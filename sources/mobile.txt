@@ -1,6 +1,6 @@
 #EXTM3U
 # 广东移动内网
-# 生成时间: 2026-11-27 17:28:57
+# 生成时间: 2026-11-27 09:29:13
 # 规则: 分类列表每台一条主线路，其余线路见最底部备用线路分组
 
 #EXTINF:-1 tvg-name="广东卫视" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/%E5%B9%BF%E4%B8%9C%E5%8D%AB%E8%A7%86.png" group-title="广东",广东卫视
