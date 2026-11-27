@@ -33,6 +33,7 @@
     },
     "unicom.txt": {
       "title": "广东联通内网",
+      "prefer_hd_internal": true,
       "groups": [
         { "source_groups": ["广东联通(内网)"], "role": "primary" },
         { "source_groups": ["咪咕央视2"], "role": "backup" },

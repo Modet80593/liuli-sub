@@ -207,6 +207,13 @@ def valid_name(name: str) -> bool:
 QUALITY_RE = re.compile(
     r"((?:HD|4K|8K|超清|高清|标清|蓝光|SD|1080P|720P|超高清)\s*)+$", re.I)
 
+# 高清/超高清画质标记（用于内网双版本线路排序）；命中即视为高清线
+HD_RE = re.compile(r"高清|超清|4K|8K|HD|超高清|蓝光|1080P|720P", re.I)
+
+
+def is_hd_name(name: str) -> bool:
+    return bool(HD_RE.search(name or ""))
+
 
 def norm(name: str) -> str:
     """频道名归一：别名对齐、CCTV 编号统一、剥画质后缀，用于跨源同名合并。"""
@@ -432,7 +439,7 @@ class ChannelBook:
         self.entries = {}
         self.order = []
 
-    def add(self, name, url, logo=""):
+    def add(self, name, url, logo="", internal=False):
         key = canon(name)
         if not key or not url:
             return
@@ -440,9 +447,11 @@ class ChannelBook:
             return
         if re.fullmatch(r"CCTV-?", norm(name), re.I):
             return
+        meta = {"hd": is_hd_name(name), "internal": internal}
         if key in self.entries:
             if url not in self.entries[key]["urls"]:
                 self.entries[key]["urls"].append(url)
+                self.entries[key]["meta"][url] = meta
         else:
             display = norm(name)
             # 统一用台标库匹配，不采信第三方源自带的不可靠图标地址
@@ -450,8 +459,18 @@ class ChannelBook:
                 "name": display,
                 "urls": [url],
                 "logo": logo_for(display),
+                "meta": {url: meta},
             }
             self.order.append(key)
+
+    def reorder_internal_hd(self):
+        """内网线路内：高清线稳定排在标清线前面；外网/备用池线路仍沉在内网之后。"""
+        for e in self.entries.values():
+            meta = e["meta"]
+            internal = [u for u in e["urls"] if meta[u]["internal"]]
+            external = [u for u in e["urls"] if not meta[u]["internal"]]
+            internal.sort(key=lambda u: 0 if meta[u]["hd"] else 1)
+            e["urls"] = internal + external
 
 
 # ---------- M3U 输出 ----------
@@ -521,12 +540,12 @@ def build_subscription(sub_cfg, groups, spare_rows=None, spare_cap=8, priority=N
         if role == "primary":
             for name, url in rows:
                 k = canon(name)
-                book.add(name, url)
+                book.add(name, url, internal=True)
                 if k in book.entries and k not in primary_keys:
                     primary_keys.append(k)
         else:
             for name, url in rows:
-                book.add(name, url)
+                book.add(name, url, internal=False)
 
     # 备用线路池：星海种子 + 第三方直连，只并入已存在的频道，不新增卡片
     spare_added = 0
@@ -539,6 +558,10 @@ def build_subscription(sub_cfg, groups, spare_rows=None, spare_cap=8, priority=N
                 spare_added += 1
     if spare_rows:
         print(f"[ok] 备用线路池并入 {spare_added} 条匹配线路")
+
+    # 内网双版本频道：高清线置顶，4:3 标清线沉到内网末尾（仅开启该规则的订阅）
+    if sub_cfg.get("prefer_hd_internal"):
+        book.reorder_internal_hd()
 
     # 指定频道的优先线路置顶（如珠江台改用 xch819、大湾区改用 20260809）
     apply_line_priority(book, priority)
