@@ -67,8 +67,12 @@ Raw 访问慢时可用 jsDelivr 镜像（有几分钟到一小时缓存）：
 
 ### 台标说明
 
-当前订阅输出**不带频道图标**（M3U 中不写 tvg-logo 字段）；如后续需要恢复台标，
-在生成器的 `extinf_line` / 输出段补回 tvg-logo 即可。
+- 每个频道在 `#EXTINF` 行写入 `tvg-logo` 字段，台标统一取 fanmingming/live 台标库
+  （`raw.githubusercontent.com/fanmingming/live/main/tv/`），不采信第三方源自带的死主机图标；
+- 频道名经别名表 + 同系列/同省级台兜底匹配库内 PNG；库内确实没有台标的县市小台、人名电影台、
+  轮播熊猫台不写图标，App 加载失败会回退空白、不崩溃；
+- 台标库清单见 `seed/logos.txt`，别名与兜底规则写在 `scripts/build_sources.py`，
+  定时重建时随订阅一起刷新。
 
 ### backup.txt（全集备用源）
 

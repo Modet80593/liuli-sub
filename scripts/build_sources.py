@@ -23,6 +23,7 @@ import json
 import os
 import re
 import urllib.request
+import urllib.parse
 import datetime
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -75,6 +76,76 @@ CAT_ORDER = ["广东", "央视", "卫视", "少儿", "纪实", "体育", "电影
 
 # 备用线路分组名：带“其他”关键字，让 App 端排序时沉到分类栏最底部
 EXTRA_GROUP = "其他·备用线路"
+
+# 台标库（fanmingming/live 的 tv 目录，清单见 seed/logos.txt）
+LOGO_BASE = "https://raw.githubusercontent.com/fanmingming/live/main/tv"
+LOGO_LIST_PATH = os.path.join(SEED_DIR, "logos.txt")
+
+# 频道名 -> 台标文件名（库内文件名与频道名不一致时的对齐表；未命中不写台标）
+LOGO_ALIAS = {
+    "广东珠江频道": "广东珠江",
+    "南方影视": "南方卫视",
+    "中国教育1": "CETV1", "中国教育2": "CETV2",
+    "中国教育3": "CETV3", "中国教育4": "CETV4",
+    "卡酷动画": "卡酷少儿", "北京卡酷少儿": "卡酷少儿",
+    "优漫卡通频道": "优漫卡通",
+    "江苏城市频道": "江苏城市", "江苏影视频道": "江苏影视",
+    "江苏教育": "江苏教育电视台", "江苏综艺频道": "江苏综艺",
+    "公共新闻频道": "江苏公共新闻",
+    "上视新闻综合": "上视新闻", "上视东方影视": "东方影视",
+    "上海新闻综合": "上视新闻",
+    "第一财经": "上海第一财经",
+    "重庆影视剧": "重庆影视",
+    "陕西体育休闲频道": "陕西体育休闲", "陕西新闻资讯频道": "陕西新闻资讯",
+    "陕西都市青春频道": "陕西都市青春",
+    "山东教育卫视": "山东教育",
+    "中国农林卫视": "农林卫视",
+    "书画频道": "书画", "国学频道": "国学",
+    "海南广播电视总台少儿频道": "海南少儿",
+    "海南广播电视总台文旅频道": "海南文旅",
+    "佛山城市生活": "佛山公共",
+}
+
+
+LOGO_SET = set()
+
+
+def load_logo_set():
+    """读取台标库清单（fanmingming/live tv 目录文件名，不含扩展名）。"""
+    global LOGO_SET
+    if os.path.exists(LOGO_LIST_PATH):
+        with open(LOGO_LIST_PATH, encoding="utf-8") as f:
+            LOGO_SET = {ln.strip() for ln in f if ln.strip()}
+
+
+def logo_for(name: str) -> str:
+    """按频道名匹配台标库，返回 tvg-logo 地址；匹配不到返回空串（不写图标）。"""
+    if not name:
+        return ""
+    base = LOGO_ALIAS.get(name)
+    if not base and name in LOGO_SET:
+        base = name
+    if not base:
+        stripped = re.sub(r"(频道|电视台)$", "", name)
+        if stripped in LOGO_SET:
+            base = stripped
+    # 通用兜底：同系列/同省级台共用一张台标
+    if not base:
+        if re.match(r"^咪咕(视频|4K)", name):
+            base = "咪咕视频"
+        elif name.startswith("天津"):
+            base = "天津卫视"
+        elif name.startswith("湖北"):
+            base = "湖北卫视"
+        elif name.startswith("吉林"):
+            base = "吉林卫视"
+        elif "文化精品" in name:
+            base = "文化精品"
+        if base and base not in LOGO_SET:
+            base = ""
+    if not base:
+        return ""
+    return f"{LOGO_BASE}/{urllib.parse.quote(base)}.png"
 
 
 def load_config():
@@ -373,28 +444,35 @@ class ChannelBook:
             if url not in self.entries[key]["urls"]:
                 self.entries[key]["urls"].append(url)
         else:
-            self.entries[key] = {"name": norm(name), "urls": [url]}
+            display = norm(name)
+            # 统一用台标库匹配，不采信第三方源自带的不可靠图标地址
+            self.entries[key] = {
+                "name": display,
+                "urls": [url],
+                "logo": logo_for(display),
+            }
             self.order.append(key)
 
 
 # ---------- M3U 输出 ----------
 
-def extinf_line(name: str, group: str) -> str:
-    return f'#EXTINF:-1 tvg-name="{name}" group-title="{group}",{name}'
+def extinf_line(name: str, group: str, logo: str = "") -> str:
+    logo_attr = f' tvg-logo="{logo}"' if logo else ""
+    return f'#EXTINF:-1 tvg-name="{name}"{logo_attr} group-title="{group}",{name}'
 
 
 def write_m3u(lines, rows, group_override=None):
     """rows: [(name, url, logo)]；group 缺省按频道名分类。"""
     by_cat = {}
-    for name, url, _logo in rows:
+    for name, url, logo in rows:
         cat = group_override or categorize(name)
-        by_cat.setdefault(cat, []).append((name, url))
+        by_cat.setdefault(cat, []).append((name, url, logo))
     for cat in CAT_ORDER:
         items = by_cat.get(cat)
         if not items:
             continue
-        for name, url in items:
-            lines.append(extinf_line(name, cat))
+        for name, url, logo in items:
+            lines.append(extinf_line(name, cat, logo))
             lines.append(url)
         lines.append("")
 
@@ -478,7 +556,8 @@ def build_subscription(sub_cfg, groups, spare_rows=None, spare_cap=8, priority=N
 
     # 主列表：内网主线路优先，备用分组独有的频道排在后面
     ordered_keys = primary_keys + [k for k in book.order if k not in primary_keys]
-    main_rows = [(book.entries[k]["name"], book.entries[k]["urls"][0], "")
+    main_rows = [(book.entries[k]["name"], book.entries[k]["urls"][0],
+                  book.entries[k]["logo"])
                  for k in ordered_keys]
     write_m3u(lines, main_rows)
 
@@ -487,10 +566,10 @@ def build_subscription(sub_cfg, groups, spare_rows=None, spare_cap=8, priority=N
     for k in ordered_keys:
         e = book.entries[k]
         for u in e["urls"][1:]:
-            extras.append((e["name"], u))
+            extras.append((e["name"], u, e["logo"]))
     if extras:
-        for name, url in extras:
-            lines.append(extinf_line(name, EXTRA_GROUP))
+        for name, url, logo in extras:
+            lines.append(extinf_line(name, EXTRA_GROUP, logo))
             lines.append(url)
         lines.append("")
 
@@ -527,7 +606,7 @@ def build_others(sub_cfg, groups, order):
     lines.append("")
     for g, kept in kept_groups:
         for name, url in kept:
-            lines.append(extinf_line(name, g))
+            lines.append(extinf_line(name, g, logo_for(name)))
             lines.append(url)
         lines.append("")
     stats = {"channels": channel_count, "lines": line_count}
@@ -571,6 +650,7 @@ def load_spare_pool(cfg):
 
 def main():
     cfg = load_config()
+    load_logo_set()
     text = get_upstream_text(cfg)
     groups, order = parse_upstream_groups(text)
     spare_rows = load_spare_pool(cfg)
