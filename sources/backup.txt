@@ -1,6 +1,6 @@
 #EXTM3U
 # 琉璃TV · 全集备用源（上游其余分组原样保留）
-# 生成时间: 2026-11-28 00:52:39
+# 生成时间: 2026-11-28 06:56:07
 
 #EXTINF:-1 tvg-name="街道办GDC/欧阳耀莹-春娇与志明" group-title="抖音K歌",街道办GDC/欧阳耀莹-春娇与志明
 https://www.iesdouyin.com/aweme/v1/playwm/?video_id=v0200f890000bt2sn535j22kbcal83p0&ratio=720p&line=0
@@ -240,8 +240,6 @@ https://www.iesdouyin.com/aweme/v1/playwm/?video_id=v0200fg10000clg15bnog65otdht
 https://www.iesdouyin.com/aweme/v1/playwm/?video_id=v0200fg10000cd72dobc77u85rlotlp0&ratio=720p&line=0
 #EXTINF:-1 tvg-name="泳儿-24首合集" group-title="抖音K歌",泳儿-24首合集
 https://www.iesdouyin.com/aweme/v1/playwm/?video_id=v0200fg10000celom73c77u7maj81qo0&ratio=720p&line=0
-#EXTINF:-1 tvg-name="海明威/泳儿-我的回忆不是我的" group-title="抖音K歌",海明威/泳儿-我的回忆不是我的
-https://www.iesdouyin.com/aweme/v1/playwm/?video_id=v0300fg10000crob83nog65jioid2pv0&ratio=720p&line=0
 #EXTINF:-1 tvg-name="古巨基-爱与诚" group-title="抖音K歌",古巨基-爱与诚
 https://www.iesdouyin.com/aweme/v1/playwm/?video_id=v0300fg10000cq20gevog65vbni5bjpg&ratio=720p&line=0
 #EXTINF:-1 tvg-name="黎瑞恩-一人有一个的梦想" group-title="抖音K歌",黎瑞恩-一人有一个的梦想
